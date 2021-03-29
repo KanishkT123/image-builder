@@ -5,7 +5,8 @@
         "vm_name": "{{user `build_version`}}",
         "disk_size": "{{user `disk_size`}}",
         "floppy_files": [
-          "./packer/hyper-v/windows/{{user `build_name`}}/autounattend.xml"
+          "./packer/hyper-v/windows/{{user `build_name`}}/autounattend.xml",
+          "./packer/hyper-v/windows/sysprep.ps1"
         ],
         "boot_wait": "{{user `boot_wait`}}",
         "boot_command": [
@@ -34,7 +35,7 @@
       {
         "type": "powershell",
         "elevated_password": "{{.WinRMPassword}}",
-        "elevated_user": "packer",
+        "elevated_user": "Administrator",
         "script": "ansible/windows/ansible_winrm.ps1"
       },
       {
