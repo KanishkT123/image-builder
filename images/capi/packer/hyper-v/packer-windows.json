@@ -1,0 +1,118 @@
+{
+    "builders": [
+      {
+        "type": "hyperv-iso",
+        "vm_name": "{{user `build_version`}}",
+        "disk_size": "{{user `disk_size`}}",
+        "floppy_files": [
+          "./packer/hyper-v/windows/{{user `build_name`}}/autounattend.xml"
+        ],
+        "boot_wait": "{{user `boot_wait`}}",
+        "boot_command": [
+          "a<wait>a<wait>a"
+        ],
+        "iso_url": "http://download.microsoft.com/download/6/2/A/62A76ABB-9990-4EFC-A4FE-C7D698DAEB96/9600.16384.WINBLUE_RTM.130821-1623_X64FRE_SERVER_EVAL_EN-US-IRM_SSS_X64FREE_EN-US_DV5.ISO",
+        "iso_checksum": "{{user `iso_checksum` }}",
+        "iso_urls": [
+          "{{user `os_iso_url`}}"
+        ],
+        "output_directory": "{{user `output_dir`}}",
+        "communicator": "winrm",
+        "winrm_password": "password!",
+        "winrm_timeout": "4h",
+        "winrm_username": "Administrator",
+        "shutdown_timeout": "30m",
+        "memory": 4096,
+        "cpus": 4,
+        "generation": 2,
+        "switch_name": "LAN",
+        "skip_export": true,
+        "enable_secure_boot": true
+      }
+    ],
+    "provisioners": [
+      {
+        "type": "powershell",
+        "elevated_password": "{{.WinRMPassword}}",
+        "elevated_user": "packer",
+        "script": "ansible/windows/ansible_winrm.ps1"
+      },
+      {
+        "ansible_env_vars": [
+          "ANSIBLE_REMOTE_TEMP='/tmp/.ansible/'"
+        ],
+        "extra_arguments": [
+          "-e",
+          "ansible_winrm_server_cert_validation=ignore",
+          "--extra-vars",
+          "{{user `ansible_common_vars`}}",
+          "--extra-vars",
+          "{{user `ansible_extra_vars`}}"
+        ],
+        "playbook_file": "ansible/windows/node_windows.yml",
+        "type": "ansible",
+        "use_proxy": false,
+        "user": "Administrator"
+      },
+      {
+        "type": "windows-restart",
+        "restart_timeout": "2h",
+        "pause_before": "30s",
+        "restart_check_command": "powershell -command \"& {Write-Output 'restarted.'}\""
+      }
+    ],
+    "post-processors": [
+      {
+        "custom_data": {
+          "build_date": "{{isotime}}",
+          "build_name": "{{user `build_name`}}",
+          "build_timestamp": "{{user `build_timestamp`}}",
+          "build_type": "node",
+          "containerd_version": "{{user `containerd_version`}}",
+          "custom_role": "{{user `custom_role`}}",
+          "kubernetes_cni_semver": "{{user `kubernetes_cni_semver`}}",
+          "kubernetes_semver": "{{user `kubernetes_semver`}}",
+          "kubernetes_source_type": "{{user `kubernetes_source_type`}}",
+          "os_name": "{{user `distro_name`}}",
+          "resource_group_name": "{{user `resource_group_name`}}",
+          "storage_account_name": "{{user `storage_account_name`}}"
+        },
+        "output": "{{user `manifest_output`}}",
+        "strip_path": true,
+        "type": "manifest"
+      }  
+    ],
+    "variables": {
+      "additional_debug_files": null,
+      "additional_prepull_images": null,
+      "ansible_common_vars": "",
+      "ansible_extra_vars": "",
+      "azure_location": null,
+      "build_name": null,
+      "build_timestamp": "{{timestamp}}",
+      "client_id": null,
+      "client_secret": null,
+      "cloudbase_init_url": "https://github.com/cloudbase/cloudbase-init/releases/download/{{user `cloudbase_init_version`}}/CloudbaseInitSetup_{{user `cloudbase_init_version` | replace_all `.` `_` }}_x64.msi",
+      "cloudbase_logging_serial_port": "COM1,115200,N,8",
+      "cloudbase_metadata_services": "cloudbaseinit.metadata.services.azureservice.AzureService",
+      "cloudbase_metadata_services_unattend": "cloudbaseinit.metadata.services.base.EmptyMetadataService",
+      "cloudbase_plugins": "cloudbaseinit.plugins.common.ephemeraldisk.EphemeralDiskPlugin, cloudbaseinit.plugins.windows.azureguestagent.AzureGuestAgentPlugin, cloudbaseinit.plugins.common.mtu.MTUPlugin, cloudbaseinit.plugins.common.sethostname.SetHostNamePlugin",
+      "cloudbase_plugins_unattend": "cloudbaseinit.plugins.common.mtu.MTUPlugin",
+      "containerd_url": "",
+      "containerd_version": null,
+      "ib_version": "{{env `IB_VERSION`}}",
+      "image_offer": null,
+      "image_publisher": null,
+      "image_sku": null,
+      "image_version": "latest",
+      "kubernetes_base_url": "https://kubernetesreleases.blob.core.windows.net/kubernetes/{{user `kubernetes_semver`}}/binaries/node/windows/{{user `kubernetes_goarch`}}",
+      "manifest_output": "manifest.json",
+      "nssm_url": null,
+      "prepull": null,
+      "subscription_id": null,
+      "vm_size": "",
+      "windows_service_manager": null,
+      "windows_updates_kbs": null,
+      "wins_url": "https://github.com/rancher/wins/releases/download/v{{user `wins_version`}}/wins.exe"
+    }
+  }
